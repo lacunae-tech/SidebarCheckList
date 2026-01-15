@@ -36,7 +36,7 @@ namespace SidebarChecklist
 
         private int _resizeAnchorRightPx;        // workAreaの右端(px)
         private IntPtr _resizeMonitorHandle;     // 対象モニタ
-        private SidebarChecklist.Win32.NativeMethods.RECT _resizeWorkAreaPx;
+        private SidebarChecklist.Win32.NativeMethods.RECT _resizeMonitorBoundsPx;
 
 
         public MainWindow()
@@ -150,8 +150,8 @@ namespace SidebarChecklist
             var mon = _monitorService.GetTarget(target);
             var widthPx = Clamp(_settings.Window.SidebarWidthPx, MinWidthPx, MaxWidthPx);
 
-            // ★変更：Handle と WorkArea(px) を渡す
-            _appBarService.ApplyRightDock(mon.Handle, mon.WorkArea, widthPx);
+            // ★変更：Handle と Monitor bounds(px) を渡す
+            _appBarService.ApplyRightDock(mon.Handle, mon.Bounds, widthPx);
         }
 
 
@@ -234,7 +234,7 @@ namespace SidebarChecklist
             _isResizing = true;
             ResizeGrip.CaptureMouse();
 
-            // 現在のターゲット（main/sub）モニタのWorkArea(px)を保持し、
+            // 現在のターゲット（main/sub）モニタのBounds(px)を保持し、
             // 右端は実ウィンドウの右端(px)でアンカーする
             var target = (_settings.Display.TargetMonitor ?? "main").ToLowerInvariant();
             if (target == "sub" && !_monitorService.HasSubMonitor())
@@ -242,7 +242,7 @@ namespace SidebarChecklist
 
             var mon = _monitorService.GetTarget(target);
             _resizeMonitorHandle = mon.Handle;
-            _resizeWorkAreaPx = mon.WorkArea;
+            _resizeMonitorBoundsPx = mon.Bounds;
             _resizeAnchorRightPx = GetWindowRightEdgePx();
 
             e.Handled = true;
@@ -265,7 +265,7 @@ namespace SidebarChecklist
             _settings.Window.SidebarWidthPx = clampedPx;
 
             // ドラッグ中も追従させたいのでAppBar再配置
-            _appBarService.ApplyRightDock(_resizeMonitorHandle, _resizeWorkAreaPx, clampedPx);
+            _appBarService.ApplyRightDock(_resizeMonitorHandle, _resizeMonitorBoundsPx, clampedPx);
 
             e.Handled = true;
         }
