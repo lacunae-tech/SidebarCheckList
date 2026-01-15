@@ -318,6 +318,7 @@ namespace SidebarChecklist
             try
             {
                 _checklistSaveService.Save(entry);
+                LoadChecklist();
             }
             catch
             {
