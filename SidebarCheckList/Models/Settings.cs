@@ -7,6 +7,9 @@ namespace SidebarChecklist.Models
         [JsonPropertyName("version")]
         public string Version { get; set; } = "1.0";
 
+        [JsonPropertyName("api")]
+        public ApiSettings Api { get; set; } = new();
+
         [JsonPropertyName("window")]
         public WindowSettings Window { get; set; } = new();
 
@@ -46,5 +49,20 @@ namespace SidebarChecklist.Models
 
         [JsonPropertyName("checkbox_size")]
         public int CheckboxSize { get; set; } = 16;
+    }
+
+    public sealed class ApiSettings
+    {
+        [JsonPropertyName("enabled")]
+        public bool Enabled { get; set; }
+
+        [JsonPropertyName("base_url")]
+        public string BaseUrl { get; set; } = "";
+
+        [JsonPropertyName("api_key")]
+        public string ApiKey { get; set; } = "";
+
+        [JsonPropertyName("timeout_ms")]
+        public int TimeoutMs { get; set; } = 3000;
     }
 }
