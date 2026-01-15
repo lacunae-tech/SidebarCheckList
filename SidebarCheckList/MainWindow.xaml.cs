@@ -3,11 +3,13 @@ using SidebarChecklist.Services;
 using SidebarChecklist.ViewModels;
 using SidebarChecklist.Win32;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Data;
 using System.Windows.Threading;
 
 namespace SidebarChecklist
@@ -36,6 +38,8 @@ namespace SidebarChecklist
         private readonly DispatcherTimer _foregroundTimer;
         private readonly DispatcherTimer _toastTimer;
         private bool _isTopmostSuspended;
+        private ICollectionView? _listView;
+        private string _listSearchText = "";
 
         // Resize state
         private bool _isResizing;
@@ -242,6 +246,7 @@ namespace SidebarChecklist
             MessageOverlay.Visibility = Visibility.Visible;
             ItemsCtl.ItemsSource = null;
             ListCombo.ItemsSource = null;
+            _listView = null;
         }
 
         private void HideBodyMessage()
@@ -272,6 +277,12 @@ namespace SidebarChecklist
 
             _settings.Selection.SelectedListId = id;
             SafeSaveSettings();
+        }
+
+        private void ListSearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            _listSearchText = ListSearchBox.Text ?? "";
+            ApplyListFilter();
         }
 
         // --- モニタ切替：即移動＋即保存（12.5）
@@ -392,6 +403,8 @@ namespace SidebarChecklist
             // UIバインド（ComboBox/Items）
             ListCombo.ItemsSource = _vm.Lists;
             ListCombo.SelectedValue = _vm.SelectedList?.Id;
+            _listView = CollectionViewSource.GetDefaultView(_vm.Lists);
+            ApplyListFilter();
 
             ItemsCtl.ItemsSource = _vm.Items;
             HideBodyMessage();
@@ -406,6 +419,30 @@ namespace SidebarChecklist
         {
             var dpi = VisualTreeHelper.GetDpi(this);
             return dpi.DpiScaleX == 0 ? 1.0 : dpi.DpiScaleX;
+        }
+
+        private void ApplyListFilter()
+        {
+            if (_listView is null) return;
+
+            var keyword = _listSearchText.Trim();
+            _listView.Filter = item =>
+            {
+                if (item is not ChecklistListViewModel list) return false;
+                if (string.IsNullOrEmpty(keyword)) return true;
+
+                return list.Name.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0;
+            };
+            _listView.Refresh();
+
+            if (ListCombo.SelectedItem is null)
+            {
+                var first = _listView.Cast<ChecklistListViewModel>().FirstOrDefault();
+                if (first is not null)
+                {
+                    ListCombo.SelectedItem = first;
+                }
+            }
         }
     }
 }
