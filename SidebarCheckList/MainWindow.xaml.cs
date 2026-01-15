@@ -222,7 +222,8 @@ namespace SidebarChecklist
             _isResizing = true;
             ResizeGrip.CaptureMouse();
 
-            // 現在のターゲット（main/sub）モニタのWorkArea(px)をアンカーとして保持
+            // 現在のターゲット（main/sub）モニタのWorkArea(px)を保持し、
+            // 右端は実ウィンドウの右端(px)でアンカーする
             var target = (_settings.Display.TargetMonitor ?? "main").ToLowerInvariant();
             if (target == "sub" && !_monitorService.HasSubMonitor())
                 target = "main";
@@ -230,7 +231,7 @@ namespace SidebarChecklist
             var mon = _monitorService.GetTarget(target);
             _resizeMonitorHandle = mon.Handle;
             _resizeWorkAreaPx = mon.WorkArea;
-            _resizeAnchorRightPx = mon.WorkArea.right;
+            _resizeAnchorRightPx = GetWindowRightEdgePx();
 
             e.Handled = true;
         }
@@ -268,6 +269,12 @@ namespace SidebarChecklist
             SafeSaveSettings();
 
             e.Handled = true;
+        }
+
+        private int GetWindowRightEdgePx()
+        {
+            var screenPoint = PointToScreen(new Point(ActualWidth, 0));
+            return (int)Math.Round(screenPoint.X);
         }
 
         private void SafeSaveSettings()
