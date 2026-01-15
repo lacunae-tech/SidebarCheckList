@@ -5,6 +5,7 @@ using SidebarChecklist.Win32;
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -68,6 +69,8 @@ namespace SidebarChecklist
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            SetVersionLabel();
+
             // 1) settings.json 必須：読めないなら「JSONファイルエラー」→終了してよい
             try
             {
@@ -104,6 +107,18 @@ namespace SidebarChecklist
             ApplyChecklistAppearance();
             UpdateMonitorButtonsState();
             ApplyDock();
+        }
+
+        private void SetVersionLabel()
+        {
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            if (version is null)
+            {
+                VersionText.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            VersionText.Text = $"v{version}";
         }
 
         private void ApplyChecklistAppearance()

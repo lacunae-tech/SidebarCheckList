@@ -68,19 +68,32 @@
 
             <!-- ヘッダ -->
             <Grid Margin="8,8,8,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <ComboBox x:Name="ListCombo"
+                          Grid.Column="0"
                           Width="220"
                           VerticalAlignment="Center"
                           DisplayMemberPath="Name"
                           SelectedValuePath="Id"
                           SelectionChanged="ListCombo_SelectionChanged"/>
 
+                <TextBlock x:Name="VersionText"
+                           Grid.Column="1"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                           FontSize="12"/>
+
                 <StackPanel Grid.Row="1"
+                            Grid.ColumnSpan="2"
                             Orientation="Horizontal"
                             HorizontalAlignment="Right"
                             Margin="0,6,0,0">
