@@ -4,7 +4,9 @@ using SidebarChecklist.ViewModels;
 using SidebarChecklist.Win32;
 using System;
 using System.Linq;
+using Microsoft.Win32;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -61,12 +63,15 @@ namespace SidebarChecklist
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
+            SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
             // AppBar解除
             _appBarService.Unregister();
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
+            UpdateTopmostForSession();
             // 1) settings.json 必須：読めないなら「JSONファイルエラー」→終了してよい
             try
             {
@@ -103,6 +108,24 @@ namespace SidebarChecklist
             ApplyChecklistAppearance();
             UpdateMonitorButtonsState();
             ApplyDock();
+        }
+
+        private void SystemEvents_SessionSwitch(object? sender, SessionSwitchEventArgs e)
+        {
+            if (e.Reason is SessionSwitchReason.RemoteConnect or SessionSwitchReason.RemoteDisconnect)
+            {
+                UpdateTopmostForSession();
+            }
+        }
+
+        private void UpdateTopmostForSession()
+        {
+            var isRemoteSession = SystemInformation.TerminalServerSession;
+            var desiredTopmost = !isRemoteSession;
+            if (Topmost != desiredTopmost)
+            {
+                Topmost = desiredTopmost;
+            }
         }
 
         private void SetVersionLabel(string? version)
