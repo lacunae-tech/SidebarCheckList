@@ -6,7 +6,12 @@
 		<UseWPF>true</UseWPF>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<ApplicationIcon>Assets\app.ico</ApplicationIcon>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Content Include="Assets\app.ico" />
+	</ItemGroup>
 
 	<ItemGroup>
 	  <Folder Include="新しいフォルダー\" />
