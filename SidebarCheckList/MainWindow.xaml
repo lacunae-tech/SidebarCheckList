@@ -21,23 +21,28 @@
             </Grid.RowDefinitions>
 
             <!-- ヘッダ -->
-            <DockPanel Margin="8,8,8,6" LastChildFill="True">
+            <Grid Margin="8,8,8,6">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
                 <ComboBox x:Name="ListCombo"
                           Width="220"
                           VerticalAlignment="Center"
                           DisplayMemberPath="Name"
                           SelectedValuePath="Id"
-                          SelectionChanged="ListCombo_SelectionChanged"
-                          DockPanel.Dock="Left"/>
+                          SelectionChanged="ListCombo_SelectionChanged"/>
 
-                <StackPanel Orientation="Horizontal"
+                <StackPanel Grid.Row="1"
+                            Orientation="Horizontal"
                             HorizontalAlignment="Right"
-                            DockPanel.Dock="Right">
+                            Margin="0,6,0,0">
                     <Button x:Name="RefreshBtn" Content="リフレッシュ" Margin="0,0,6,0" Click="RefreshBtn_Click"/>
                     <Button x:Name="MainBtn" Content="メイン" Margin="0,0,6,0" Click="MainBtn_Click"/>
                     <Button x:Name="SubBtn" Content="サブ" Click="SubBtn_Click"/>
                 </StackPanel>
-            </DockPanel>
+            </Grid>
 
             <!-- 区切り線 -->
             <Border Grid.Row="1"
