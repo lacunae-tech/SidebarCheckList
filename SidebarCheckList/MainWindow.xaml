@@ -97,6 +97,7 @@
                             Orientation="Horizontal"
                             HorizontalAlignment="Right"
                             Margin="0,6,0,0">
+                    <Button x:Name="SaveBtn" Content="保存" Margin="0,0,6,0" Click="SaveBtn_Click"/>
                     <Button x:Name="RefreshBtn" Content="リフレッシュ" Margin="0,0,6,0" Click="RefreshBtn_Click"/>
                     <Button x:Name="MainBtn" Content="メイン" Margin="0,0,6,0" Click="MainBtn_Click"/>
                     <Button x:Name="SubBtn" Content="サブ" Click="SubBtn_Click"/>

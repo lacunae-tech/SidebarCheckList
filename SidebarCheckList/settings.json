@@ -18,6 +18,7 @@
   "checklist": {
     "font_size": 14,
     "checkbox_size": 16,
-    "path": ""
+    "path": "",
+    "save_path": ""
   }
 }

@@ -52,6 +52,9 @@ namespace SidebarChecklist.Models
 
         [JsonPropertyName("path")]
         public string Path { get; set; } = "";
+
+        [JsonPropertyName("save_path")]
+        public string SavePath { get; set; } = "";
     }
 
     public sealed class ApiSettings
