@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "window": {
+    "sidebar_width_px": 400
+  },
+  "display": {
+    "target_monitor": "main"
+  },
+  "selection": {
+    "selected_list_id": "mail_send"
+  }
+}
