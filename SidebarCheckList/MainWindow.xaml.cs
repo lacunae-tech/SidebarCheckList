@@ -25,6 +25,7 @@ namespace SidebarChecklist
         private readonly string _appDir;
         private readonly SettingsService _settingsService;
         private ChecklistService _checklistService = null!;
+        private ChecklistSaveService _checklistSaveService = null!;
         private readonly MonitorService _monitorService;
         private readonly AppBarService _appBarService;
 
@@ -107,6 +108,7 @@ namespace SidebarChecklist
             }
 
             _checklistService = new ChecklistService(_appDir, _settings.Checklist.Path);
+            _checklistSaveService = new ChecklistSaveService(_appDir, _settings.Checklist.SavePath);
 
             // 3) checklist.json 読み込み（任意）
             LoadChecklist();
@@ -293,6 +295,36 @@ namespace SidebarChecklist
             LoadChecklist();
         }
 
+        private void SaveBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (_checklistRoot is null || _vm.SelectedList is null)
+            {
+                MessageBox.Show("チェックリストが存在しません", "保存", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var entry = new ChecklistSaveEntry
+            {
+                Id = _vm.SelectedList.Id ?? "",
+                Timestamp = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                ChecklistVersion = _checklistRoot.Version ?? "",
+                Items = _vm.Items.Select(item => new ChecklistSavedItem
+                {
+                    Text = item.Text ?? "",
+                    IsChecked = item.IsChecked
+                }).ToList()
+            };
+
+            try
+            {
+                _checklistSaveService.Save(entry);
+            }
+            catch
+            {
+                MessageBox.Show("保存に失敗しました", "保存", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void SafeSaveSettings()
         {
             try
@@ -318,6 +350,7 @@ namespace SidebarChecklist
                 // 「チェックリストが存在しません」または「JSONファイルエラー」
                 SetVersionLabel(null);
                 ShowBodyMessage(load.ErrorMessage ?? "チェックリストが存在しません");
+                SaveBtn.IsEnabled = false;
                 return;
             }
 
@@ -334,6 +367,8 @@ namespace SidebarChecklist
 
             ItemsCtl.ItemsSource = _vm.Items;
             HideBodyMessage();
+
+            SaveBtn.IsEnabled = true;
 
             // settings上のselected_list_idを実際の選択に合わせて補正し、起動時に保存はしない（仕様に未記載のため）
             // → ただし “保持” が必要なので、ユーザー操作時に保存する（10.3）。
