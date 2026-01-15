@@ -161,11 +161,13 @@ namespace SidebarChecklist
             MessageOverlay.Visibility = Visibility.Visible;
             ItemsCtl.ItemsSource = null;
             ListCombo.ItemsSource = null;
+            RefreshBtn.IsEnabled = false;
         }
 
         private void HideBodyMessage()
         {
             MessageOverlay.Visibility = Visibility.Collapsed;
+            RefreshBtn.IsEnabled = _vm.Items.Any();
         }
 
         // --- リスト切替：変更時に即 settings.json 保存（10.3）
@@ -191,6 +193,7 @@ namespace SidebarChecklist
 
             _settings.Selection.SelectedListId = id;
             SafeSaveSettings();
+            RefreshBtn.IsEnabled = _vm.Items.Any();
         }
 
         // --- モニタ切替：即移動＋即保存（12.5）
@@ -214,6 +217,15 @@ namespace SidebarChecklist
             UpdateMonitorButtonsState();
             ApplyDock();
             SafeSaveSettings();
+        }
+
+        private void RefreshBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (_vm.SelectedList is null) return;
+
+            _vm.RefreshItems();
+            ItemsCtl.ItemsSource = _vm.Items;
+            RefreshBtn.IsEnabled = _vm.Items.Any();
         }
 
         // --- 幅変更：左端ドラッグ、ドラッグ終了時に保存（8.3）
