@@ -51,20 +51,15 @@
                     <ItemsControl x:Name="ItemsCtl">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,6,0,6">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <CheckBox VerticalAlignment="Top"
-                                              IsChecked="{Binding IsChecked}"/>
-
-                                    <TextBlock Grid.Column="1"
-                                               Margin="8,0,0,0"
-                                               TextWrapping="Wrap"
-                                               Text="{Binding Text}"/>
-                                </Grid>
+                                <CheckBox Margin="0,6,0,6"
+                                          VerticalAlignment="Top"
+                                          IsChecked="{Binding IsChecked}">
+                                    <CheckBox.Content>
+                                        <TextBlock Margin="8,0,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Text="{Binding Text}"/>
+                                    </CheckBox.Content>
+                                </CheckBox>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
