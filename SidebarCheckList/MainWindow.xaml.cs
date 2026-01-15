@@ -3,9 +3,7 @@ using SidebarChecklist.Services;
 using SidebarChecklist.ViewModels;
 using SidebarChecklist.Win32;
 using System;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -69,8 +67,6 @@ namespace SidebarChecklist
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            SetVersionLabel();
-
             // 1) settings.json 必須：読めないなら「JSONファイルエラー」→終了してよい
             try
             {
@@ -109,16 +105,16 @@ namespace SidebarChecklist
             ApplyDock();
         }
 
-        private void SetVersionLabel()
+        private void SetVersionLabel(string? version)
         {
-            var version = Assembly.GetExecutingAssembly().GetName().Version;
-            if (version is null)
+            if (string.IsNullOrWhiteSpace(version))
             {
                 VersionText.Visibility = Visibility.Collapsed;
                 return;
             }
 
             VersionText.Text = $"v{version}";
+            VersionText.Visibility = Visibility.Visible;
         }
 
         private void ApplyChecklistAppearance()
@@ -244,11 +240,13 @@ namespace SidebarChecklist
             {
                 _checklistRoot = null;
                 // 「チェックリストが存在しません」または「JSONファイルエラー」
+                SetVersionLabel(null);
                 ShowBodyMessage(load.ErrorMessage ?? "チェックリストが存在しません");
                 return;
             }
 
             _checklistRoot = load.Root;
+            SetVersionLabel(_checklistRoot.Version);
 
             // 4) selected_list_id 不正 → 静かに先頭へ（UIエラーなし）
             var preferredId = _settings.Selection.SelectedListId ?? "";
