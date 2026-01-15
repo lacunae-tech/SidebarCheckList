@@ -75,6 +75,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <ComboBox x:Name="ListCombo"
@@ -93,6 +94,18 @@
                            FontSize="12"/>
 
                 <StackPanel Grid.Row="1"
+                            Grid.ColumnSpan="2"
+                            Orientation="Horizontal"
+                            Margin="0,6,0,0">
+                    <TextBlock Text="検索"
+                               VerticalAlignment="Center"
+                               Margin="0,0,6,0"/>
+                    <TextBox x:Name="ListSearchBox"
+                             Width="200"
+                             TextChanged="ListSearchBox_TextChanged"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2"
                             Grid.ColumnSpan="2"
                             Orientation="Horizontal"
                             HorizontalAlignment="Right"
