@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace SidebarChecklist
 {
@@ -30,7 +31,7 @@ namespace SidebarChecklist
         // Resize state
         private bool _isResizing;
         private Point _resizeStartPoint;
-        private double _resizeStartWidth;
+        private double _resizeStartWidthPx;
 
         public MainWindow()
         {
@@ -212,7 +213,7 @@ namespace SidebarChecklist
         {
             _isResizing = true;
             _resizeStartPoint = e.GetPosition(this);
-            _resizeStartWidth = Width;
+            _resizeStartWidthPx = Width * GetDpiScaleX();
             ResizeGrip.CaptureMouse();
         }
 
@@ -224,8 +225,8 @@ namespace SidebarChecklist
             var dx = p.X - _resizeStartPoint.X;
 
             // 左端ドラッグ：右端固定想定なので「幅 = 開始幅 - dx」
-            var newWidth = _resizeStartWidth - dx;
-            var clamped = Clamp((int)Math.Round(newWidth), MinWidthPx, MaxWidthPx);
+            var newWidthPx = _resizeStartWidthPx - (dx * GetDpiScaleX());
+            var clamped = Clamp((int)Math.Round(newWidthPx), MinWidthPx, MaxWidthPx);
 
             _settings.Window.SidebarWidthPx = clamped;
             ApplyDock(); // ドック位置を維持
@@ -256,5 +257,11 @@ namespace SidebarChecklist
 
         private static int Clamp(int v, int min, int max)
             => v < min ? min : (v > max ? max : v);
+
+        private double GetDpiScaleX()
+        {
+            var dpi = VisualTreeHelper.GetDpi(this);
+            return dpi.DpiScaleX == 0 ? 1.0 : dpi.DpiScaleX;
+        }
     }
 }
