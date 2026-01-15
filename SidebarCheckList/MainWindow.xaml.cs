@@ -123,8 +123,8 @@ namespace SidebarChecklist
 
         private void UpdateTopmostForForegroundWindow()
         {
-            var processName = GetForegroundProcessName();
-            var shouldSuspend = IsRemoteDesktopProcess(processName);
+            var hwnd = NativeMethods.GetForegroundWindow();
+            var shouldSuspend = IsFullScreenRemoteDesktopWindow(hwnd);
 
             if (shouldSuspend && Topmost)
             {
@@ -138,6 +138,43 @@ namespace SidebarChecklist
             }
         }
 
+        private static bool IsFullScreenRemoteDesktopWindow(IntPtr hwnd)
+        {
+            if (hwnd == IntPtr.Zero)
+                return false;
+
+            var processName = GetProcessNameFromWindow(hwnd);
+            if (!IsRemoteDesktopProcess(processName))
+                return false;
+
+            if (!NativeMethods.GetWindowRect(hwnd, out var rect))
+                return false;
+
+            var monitor = NativeMethods.MonitorFromWindow(hwnd, NativeMethods.MONITOR_DEFAULTTONEAREST);
+            if (monitor == IntPtr.Zero)
+                return false;
+
+            var monitorInfo = new NativeMethods.MONITORINFOEX
+            {
+                cbSize = System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.MONITORINFOEX>()
+            };
+
+            if (!NativeMethods.GetMonitorInfo(monitor, ref monitorInfo))
+                return false;
+
+            return IsFullScreenRect(rect, monitorInfo.rcMonitor);
+        }
+
+        private static bool IsFullScreenRect(NativeMethods.RECT windowRect, NativeMethods.RECT monitorRect)
+        {
+            const int tolerancePx = 2;
+
+            return Math.Abs(windowRect.left - monitorRect.left) <= tolerancePx
+                && Math.Abs(windowRect.top - monitorRect.top) <= tolerancePx
+                && Math.Abs(windowRect.right - monitorRect.right) <= tolerancePx
+                && Math.Abs(windowRect.bottom - monitorRect.bottom) <= tolerancePx;
+        }
+
         private static bool IsRemoteDesktopProcess(string? processName)
         {
             if (string.IsNullOrWhiteSpace(processName))
@@ -147,12 +184,8 @@ namespace SidebarChecklist
                 || string.Equals(processName, "msrdc", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static string? GetForegroundProcessName()
+        private static string? GetProcessNameFromWindow(IntPtr hwnd)
         {
-            var hwnd = NativeMethods.GetForegroundWindow();
-            if (hwnd == IntPtr.Zero)
-                return null;
-
             NativeMethods.GetWindowThreadProcessId(hwnd, out var pid);
             if (pid == 0)
                 return null;

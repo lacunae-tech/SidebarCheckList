@@ -60,6 +60,12 @@ namespace SidebarChecklist.Win32
         public static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
+        public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+        [DllImport("user32.dll")]
         public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto)]
