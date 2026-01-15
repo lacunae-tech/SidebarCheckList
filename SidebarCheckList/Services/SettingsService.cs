@@ -1,6 +1,7 @@
 ﻿using SidebarChecklist.Models;
 using System;
 using System.IO;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace SidebarChecklist.Services
@@ -43,6 +44,7 @@ namespace SidebarChecklist.Services
         private static JsonSerializerOptions JsonOptions(bool writeIndented = false)
             => new JsonSerializerOptions
             {
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = writeIndented
             };
