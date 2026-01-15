@@ -93,31 +93,7 @@ namespace SidebarChecklist
             }
 
             // 3) checklist.json 読み込み（任意）
-            var load = _checklistService.LoadOptional();
-            if (load.Root is null)
-            {
-                // 「チェックリストが存在しません」または「JSONファイルエラー」
-                ShowBodyMessage(load.ErrorMessage ?? "チェックリストが存在しません");
-                UpdateMonitorButtonsState();
-                ApplyDock(); // 右端ドックは行う
-                return;
-            }
-
-            _checklistRoot = load.Root;
-
-            // 4) selected_list_id 不正 → 静かに先頭へ（UIエラーなし）
-            var preferredId = _settings.Selection.SelectedListId ?? "";
-            _vm.SetLists(_checklistRoot.Lists, preferredId);
-
-            // UIバインド（ComboBox/Items）
-            ListCombo.ItemsSource = _vm.Lists;
-            ListCombo.SelectedValue = _vm.SelectedList?.Id;
-
-            ItemsCtl.ItemsSource = _vm.Items;
-            HideBodyMessage();
-
-            // settings上のselected_list_idを実際の選択に合わせて補正し、起動時に保存はしない（仕様に未記載のため）
-            // → ただし “保持” が必要なので、ユーザー操作時に保存する（10.3）。
+            LoadChecklist();
 
             UpdateMonitorButtonsState();
             ApplyDock();
@@ -212,6 +188,10 @@ namespace SidebarChecklist
             SafeSaveSettings();
         }
 
+        private void RefreshBtn_Click(object sender, RoutedEventArgs e)
+        {
+            LoadChecklist();
+        }
 
         private void SafeSaveSettings()
         {
@@ -228,6 +208,34 @@ namespace SidebarChecklist
 
         private static int Clamp(int v, int min, int max)
             => v < min ? min : (v > max ? max : v);
+
+        private void LoadChecklist()
+        {
+            var load = _checklistService.LoadOptional();
+            if (load.Root is null)
+            {
+                _checklistRoot = null;
+                // 「チェックリストが存在しません」または「JSONファイルエラー」
+                ShowBodyMessage(load.ErrorMessage ?? "チェックリストが存在しません");
+                return;
+            }
+
+            _checklistRoot = load.Root;
+
+            // 4) selected_list_id 不正 → 静かに先頭へ（UIエラーなし）
+            var preferredId = _settings.Selection.SelectedListId ?? "";
+            _vm.SetLists(_checklistRoot.Lists, preferredId);
+
+            // UIバインド（ComboBox/Items）
+            ListCombo.ItemsSource = _vm.Lists;
+            ListCombo.SelectedValue = _vm.SelectedList?.Id;
+
+            ItemsCtl.ItemsSource = _vm.Items;
+            HideBodyMessage();
+
+            // settings上のselected_list_idを実際の選択に合わせて補正し、起動時に保存はしない（仕様に未記載のため）
+            // → ただし “保持” が必要なので、ユーザー操作時に保存する（10.3）。
+        }
 
         private double GetDpiScaleX()
         {
