@@ -16,6 +16,10 @@ namespace SidebarChecklist
         private const int DefaultWidth = 400;
         private const int MinWidthPx = 280;
         private const int MaxWidthPx = 900;
+        private const int MinChecklistFontSize = 10;
+        private const int MaxChecklistFontSize = 28;
+        private const int MinChecklistCheckboxSize = 12;
+        private const int MaxChecklistCheckboxSize = 28;
 
         private readonly string _appDir;
         private readonly SettingsService _settingsService;
@@ -78,6 +82,8 @@ namespace SidebarChecklist
 
             // 2) settings 値の丸め/フォールバック
             _settings.Window.SidebarWidthPx = Clamp(_settings.Window.SidebarWidthPx, MinWidthPx, MaxWidthPx);
+            _settings.Checklist.FontSize = Clamp(_settings.Checklist.FontSize, MinChecklistFontSize, MaxChecklistFontSize);
+            _settings.Checklist.CheckboxSize = Clamp(_settings.Checklist.CheckboxSize, MinChecklistCheckboxSize, MaxChecklistCheckboxSize);
 
             if (!string.Equals(_settings.Display.TargetMonitor, "main", StringComparison.OrdinalIgnoreCase) &&
                 !string.Equals(_settings.Display.TargetMonitor, "sub", StringComparison.OrdinalIgnoreCase))
@@ -95,8 +101,15 @@ namespace SidebarChecklist
             // 3) checklist.json 読み込み（任意）
             LoadChecklist();
 
+            ApplyChecklistAppearance();
             UpdateMonitorButtonsState();
             ApplyDock();
+        }
+
+        private void ApplyChecklistAppearance()
+        {
+            Resources["ChecklistFontSize"] = (double)_settings.Checklist.FontSize;
+            Resources["ChecklistCheckboxSize"] = (double)_settings.Checklist.CheckboxSize;
         }
 
         private void UpdateMonitorButtonsState()

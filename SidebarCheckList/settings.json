@@ -8,5 +8,9 @@
   },
   "selection": {
     "selected_list_id": "mail_send"
+  },
+  "checklist": {
+    "font_size": 14,
+    "checkbox_size": 16
   }
 }
