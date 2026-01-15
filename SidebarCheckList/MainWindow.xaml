@@ -10,21 +10,10 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <!-- 左端ドラッグ領域 -->
-            <ColumnDefinition Width="6"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- 幅変更用ドラッグ領域 -->
-        <Border x:Name="ResizeGrip"
-                Grid.Column="0"
-                Background="Transparent"
-                Cursor="SizeWE"
-                MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"
-                MouseMove="ResizeGrip_MouseMove"
-                MouseLeftButtonUp="ResizeGrip_MouseLeftButtonUp"/>
-
-        <Grid Grid.Column="1">
+        <Grid Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="1"/>
