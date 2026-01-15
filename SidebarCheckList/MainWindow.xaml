@@ -146,6 +146,23 @@
                                TextWrapping="Wrap"
                                Margin="16"/>
                 </Border>
+
+                <!-- トースト表示 -->
+                <Border x:Name="ToastOverlay"
+                        Background="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                        CornerRadius="6"
+                        Opacity="0.9"
+                        Padding="14,8"
+                        Margin="16"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Center"
+                        Visibility="Collapsed"
+                        IsHitTestVisible="False">
+                    <TextBlock x:Name="ToastText"
+                               Foreground="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"
+                               FontSize="13"
+                               Text="保存しました"/>
+                </Border>
             </Grid>
         </Grid>
     </Grid>

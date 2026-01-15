@@ -34,6 +34,7 @@ namespace SidebarChecklist
 
         private readonly MainViewModel _vm = new();
         private readonly DispatcherTimer _foregroundTimer;
+        private readonly DispatcherTimer _toastTimer;
         private bool _isTopmostSuspended;
 
         // Resize state
@@ -54,6 +55,11 @@ namespace SidebarChecklist
                 Interval = TimeSpan.FromSeconds(1)
             };
             _foregroundTimer.Tick += ForegroundTimer_Tick;
+            _toastTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(2)
+            };
+            _toastTimer.Tick += ToastTimer_Tick;
 
             DataContext = _vm;
 
@@ -73,6 +79,7 @@ namespace SidebarChecklist
             // AppBar解除
             _appBarService.Unregister();
             _foregroundTimer.Stop();
+            _toastTimer.Stop();
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -319,11 +326,31 @@ namespace SidebarChecklist
             {
                 _checklistSaveService.Save(entry);
                 LoadChecklist();
+                ShowToast("保存しました");
             }
             catch
             {
                 MessageBox.Show("保存に失敗しました", "保存", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void ShowToast(string message)
+        {
+            ToastText.Text = message;
+            ToastOverlay.Visibility = Visibility.Visible;
+            _toastTimer.Stop();
+            _toastTimer.Start();
+        }
+
+        private void HideToast()
+        {
+            ToastOverlay.Visibility = Visibility.Collapsed;
+        }
+
+        private void ToastTimer_Tick(object? sender, EventArgs e)
+        {
+            _toastTimer.Stop();
+            HideToast();
         }
 
         private void SafeSaveSettings()
