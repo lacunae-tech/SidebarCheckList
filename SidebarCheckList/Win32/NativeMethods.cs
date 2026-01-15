@@ -56,6 +56,12 @@ namespace SidebarChecklist.Win32
         [StructLayout(LayoutKind.Sequential)]
         public struct POINT { public int x, y; }
 
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
         [DllImport("shell32.dll", CharSet = CharSet.Auto)]
         public static extern uint SHAppBarMessage(uint dwMessage, ref APPBARDATA pData);
 

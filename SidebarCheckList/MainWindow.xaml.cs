@@ -3,10 +3,12 @@ using SidebarChecklist.Services;
 using SidebarChecklist.ViewModels;
 using SidebarChecklist.Win32;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace SidebarChecklist
 {
@@ -30,6 +32,8 @@ namespace SidebarChecklist
         private ChecklistRoot? _checklistRoot;
 
         private readonly MainViewModel _vm = new();
+        private readonly DispatcherTimer _foregroundTimer;
+        private bool _isTopmostSuspended;
 
         // Resize state
         private bool _isResizing;
@@ -45,6 +49,11 @@ namespace SidebarChecklist
             _checklistService = new ChecklistService(_appDir);
             _monitorService = new MonitorService();
             _appBarService = new AppBarService(this);
+            _foregroundTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _foregroundTimer.Tick += ForegroundTimer_Tick;
 
             DataContext = _vm;
 
@@ -63,6 +72,7 @@ namespace SidebarChecklist
         {
             // AppBar解除
             _appBarService.Unregister();
+            _foregroundTimer.Stop();
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -103,6 +113,66 @@ namespace SidebarChecklist
             ApplyChecklistAppearance();
             UpdateMonitorButtonsState();
             ApplyDock();
+            _foregroundTimer.Start();
+        }
+
+        private void ForegroundTimer_Tick(object? sender, EventArgs e)
+        {
+            UpdateTopmostForForegroundWindow();
+        }
+
+        private void UpdateTopmostForForegroundWindow()
+        {
+            var processName = GetForegroundProcessName();
+            var shouldSuspend = IsRemoteDesktopProcess(processName);
+
+            if (shouldSuspend && Topmost)
+            {
+                Topmost = false;
+                _isTopmostSuspended = true;
+            }
+            else if (!shouldSuspend && _isTopmostSuspended)
+            {
+                Topmost = true;
+                _isTopmostSuspended = false;
+            }
+        }
+
+        private static bool IsRemoteDesktopProcess(string? processName)
+        {
+            if (string.IsNullOrWhiteSpace(processName))
+                return false;
+
+            return string.Equals(processName, "mstsc", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(processName, "msrdc", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string? GetForegroundProcessName()
+        {
+            var hwnd = NativeMethods.GetForegroundWindow();
+            if (hwnd == IntPtr.Zero)
+                return null;
+
+            NativeMethods.GetWindowThreadProcessId(hwnd, out var pid);
+            if (pid == 0)
+                return null;
+
+            try
+            {
+                return Process.GetProcessById((int)pid).ProcessName;
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+            catch (InvalidOperationException)
+            {
+                return null;
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                return null;
+            }
         }
 
         private void SetVersionLabel(string? version)
