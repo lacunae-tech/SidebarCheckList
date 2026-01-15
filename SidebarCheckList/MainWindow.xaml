@@ -46,7 +46,6 @@
                             DockPanel.Dock="Right">
                     <Button x:Name="MainBtn" Content="メイン" Margin="0,0,6,0" Click="MainBtn_Click"/>
                     <Button x:Name="SubBtn" Content="サブ" Click="SubBtn_Click"/>
-                    <Button x:Name="RefreshBtn" Content="リフレッシュ" Margin="6,0,0,0" Click="RefreshBtn_Click"/>
                 </StackPanel>
             </DockPanel>
 

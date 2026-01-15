@@ -31,13 +31,6 @@ namespace SidebarChecklist
         private bool _isResizing;
         private Point _resizeStartPoint;
         private double _resizeStartWidth;
-        private double _resizeStartWidthPx;
-        private double _resizeScale; // px per DIP
-
-        private int _resizeAnchorRightPx;        // workAreaの右端(px)
-        private IntPtr _resizeMonitorHandle;     // 対象モニタ
-        private SidebarChecklist.Win32.NativeMethods.RECT _resizeWorkAreaPx;
-
 
         public MainWindow()
         {
@@ -106,7 +99,6 @@ namespace SidebarChecklist
                 ShowBodyMessage(load.ErrorMessage ?? "チェックリストが存在しません");
                 UpdateMonitorButtonsState();
                 ApplyDock(); // 右端ドックは行う
-
                 return;
             }
 
@@ -148,12 +140,11 @@ namespace SidebarChecklist
                 target = "main";
 
             var mon = _monitorService.GetTarget(target);
-            var widthPx = Clamp(_settings.Window.SidebarWidthPx, MinWidthPx, MaxWidthPx);
+            var width = Clamp(_settings.Window.SidebarWidthPx, MinWidthPx, MaxWidthPx);
 
-            // ★変更：Handle と WorkArea(px) を渡す
-            _appBarService.ApplyRightDock(mon.Handle, mon.WorkArea, widthPx);
+            // AppBarで作業領域確保＋右端ドック
+            _appBarService.ApplyRightDock(mon.WorkArea, width);
         }
-
 
         private void ShowBodyMessage(string msg)
         {
@@ -161,13 +152,11 @@ namespace SidebarChecklist
             MessageOverlay.Visibility = Visibility.Visible;
             ItemsCtl.ItemsSource = null;
             ListCombo.ItemsSource = null;
-            RefreshBtn.IsEnabled = false;
         }
 
         private void HideBodyMessage()
         {
             MessageOverlay.Visibility = Visibility.Collapsed;
-            RefreshBtn.IsEnabled = _vm.Items.Any();
         }
 
         // --- リスト切替：変更時に即 settings.json 保存（10.3）
@@ -193,7 +182,6 @@ namespace SidebarChecklist
 
             _settings.Selection.SelectedListId = id;
             SafeSaveSettings();
-            RefreshBtn.IsEnabled = _vm.Items.Any();
         }
 
         // --- モニタ切替：即移動＋即保存（12.5）
@@ -219,74 +207,38 @@ namespace SidebarChecklist
             SafeSaveSettings();
         }
 
-        private void RefreshBtn_Click(object sender, RoutedEventArgs e)
-        {
-            if (_vm.SelectedList is null) return;
-
-            _vm.RefreshItems();
-            ItemsCtl.ItemsSource = _vm.Items;
-            RefreshBtn.IsEnabled = _vm.Items.Any();
-        }
-
         // --- 幅変更：左端ドラッグ、ドラッグ終了時に保存（8.3）
         private void ResizeGrip_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             _isResizing = true;
+            _resizeStartPoint = e.GetPosition(this);
+            _resizeStartWidth = Width;
             ResizeGrip.CaptureMouse();
-
-            // 現在のターゲット（main/sub）モニタのWorkArea(px)を保持し、
-            // 右端は実ウィンドウの右端(px)でアンカーする
-            var target = (_settings.Display.TargetMonitor ?? "main").ToLowerInvariant();
-            if (target == "sub" && !_monitorService.HasSubMonitor())
-                target = "main";
-
-            var mon = _monitorService.GetTarget(target);
-            _resizeMonitorHandle = mon.Handle;
-            _resizeWorkAreaPx = mon.WorkArea;
-            _resizeAnchorRightPx = GetWindowRightEdgePx();
-
-            e.Handled = true;
         }
 
         private void ResizeGrip_MouseMove(object sender, MouseEventArgs e)
         {
             if (!_isResizing) return;
 
-            // マウス位置はスクリーン座標(px)で取得（DPI影響を受けない）
-            if (!SidebarChecklist.Win32.NativeMethods.GetCursorPos(out var pt))
-                return;
+            var p = e.GetPosition(this);
+            var dx = p.X - _resizeStartPoint.X;
 
-            // 右端固定：幅(px) = 右端(px) - マウスX(px)
-            var newWidthPx = _resizeAnchorRightPx - pt.x;
-            var clampedPx = Clamp((int)Math.Round((double)newWidthPx), MinWidthPx, MaxWidthPx);
+            // 左端ドラッグ：右端固定想定なので「幅 = 開始幅 - dx」
+            var newWidth = _resizeStartWidth - dx;
+            var clamped = Clamp((int)Math.Round(newWidth), MinWidthPx, MaxWidthPx);
 
-            if (clampedPx == _settings.Window.SidebarWidthPx) return;
-
-            _settings.Window.SidebarWidthPx = clampedPx;
-
-            // ドラッグ中も追従させたいのでAppBar再配置
-            _appBarService.ApplyRightDock(_resizeMonitorHandle, _resizeWorkAreaPx, clampedPx);
-
-            e.Handled = true;
+            _settings.Window.SidebarWidthPx = clamped;
+            ApplyDock(); // ドック位置を維持
         }
 
         private void ResizeGrip_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (!_isResizing) return;
-
             _isResizing = false;
             ResizeGrip.ReleaseMouseCapture();
 
-            // ドラッグ終了時に保存（仕様通り）
+            // ドラッグ終了時に保存
             SafeSaveSettings();
-
-            e.Handled = true;
-        }
-
-        private int GetWindowRightEdgePx()
-        {
-            var screenPoint = PointToScreen(new Point(ActualWidth, 0));
-            return (int)Math.Round(screenPoint.X);
         }
 
         private void SafeSaveSettings()
