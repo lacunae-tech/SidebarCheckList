@@ -49,6 +49,9 @@ namespace SidebarChecklist.Models
 
         [JsonPropertyName("checkbox_size")]
         public int CheckboxSize { get; set; } = 16;
+
+        [JsonPropertyName("path")]
+        public string Path { get; set; } = "";
     }
 
     public sealed class ApiSettings

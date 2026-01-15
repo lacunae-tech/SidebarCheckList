@@ -24,7 +24,7 @@ namespace SidebarChecklist
 
         private readonly string _appDir;
         private readonly SettingsService _settingsService;
-        private readonly ChecklistService _checklistService;
+        private ChecklistService _checklistService = null!;
         private readonly MonitorService _monitorService;
         private readonly AppBarService _appBarService;
 
@@ -46,7 +46,6 @@ namespace SidebarChecklist
 
             _appDir = AppDomain.CurrentDomain.BaseDirectory;
             _settingsService = new SettingsService(_appDir);
-            _checklistService = new ChecklistService(_appDir);
             _monitorService = new MonitorService();
             _appBarService = new AppBarService(this);
             _foregroundTimer = new DispatcherTimer
@@ -106,6 +105,8 @@ namespace SidebarChecklist
             {
                 _settings.Display.TargetMonitor = "main";
             }
+
+            _checklistService = new ChecklistService(_appDir, _settings.Checklist.Path);
 
             // 3) checklist.json 読み込み（任意）
             LoadChecklist();

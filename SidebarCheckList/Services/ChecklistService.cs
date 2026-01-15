@@ -20,9 +20,9 @@ namespace SidebarChecklist.Services
         private readonly string _cachePath;
         private readonly TimeSpan _cacheTtl = TimeSpan.FromHours(12);
 
-        public ChecklistService(string appDir)
+        public ChecklistService(string appDir, string? checklistPath = null)
         {
-            _path = Path.Combine(appDir, "checklist.json");
+            _path = ResolveChecklistPath(appDir, checklistPath);
             _cachePath = Path.Combine(appDir, "checklist.cache.json");
         }
 
@@ -73,6 +73,29 @@ namespace SidebarChecklist.Services
                     ErrorMessage = "JSONファイルエラー"
                 };
             }
+        }
+
+        private static string ResolveChecklistPath(string appDir, string? configuredPath)
+        {
+            if (string.IsNullOrWhiteSpace(configuredPath))
+            {
+                return Path.Combine(appDir, "checklist.json");
+            }
+
+            var trimmed = configuredPath.Trim();
+            var candidate = Path.IsPathRooted(trimmed) ? trimmed : Path.Combine(appDir, trimmed);
+
+            if (candidate.EndsWith(Path.DirectorySeparatorChar) || candidate.EndsWith(Path.AltDirectorySeparatorChar))
+            {
+                return Path.Combine(candidate, "checklist.json");
+            }
+
+            if (Directory.Exists(candidate))
+            {
+                return Path.Combine(candidate, "checklist.json");
+            }
+
+            return candidate;
         }
 
         private ChecklistLoadResult LoadFromApi(ApiSettings api)
