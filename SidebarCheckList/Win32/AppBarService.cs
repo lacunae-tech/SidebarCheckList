@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
 using static SidebarChecklist.Win32.NativeMethods;
 
 namespace SidebarChecklist.Win32
@@ -54,6 +55,9 @@ namespace SidebarChecklist.Win32
             if (!_registered) return;
 
             var hwnd = new WindowInteropHelper(_window).Handle;
+            var dpi = VisualTreeHelper.GetDpi(_window);
+            var scaleX = dpi.DpiScaleX == 0 ? 1.0 : dpi.DpiScaleX;
+            var scaleY = dpi.DpiScaleY == 0 ? 1.0 : dpi.DpiScaleY;
 
             // 希望位置（右端）
             var rc = new NativeMethods.RECT
@@ -82,10 +86,10 @@ namespace SidebarChecklist.Win32
             SHAppBarMessage(ABM_SETPOS, ref abd);
 
             // WPF側の位置・サイズも追従（“被らない”を成立させる）
-            _window.Left = abd.rc.left;
-            _window.Top = abd.rc.top;
-            _window.Width = width;
-            _window.Height = abd.rc.bottom - abd.rc.top;
+            _window.Left = abd.rc.left / scaleX;
+            _window.Top = abd.rc.top / scaleY;
+            _window.Width = width / scaleX;
+            _window.Height = (abd.rc.bottom - abd.rc.top) / scaleY;
         }
     }
 }
