@@ -1,12 +1,58 @@
 ﻿<Window x:Class="SidebarChecklist.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="Sidebar Checklist"
         WindowStartupLocation="Manual"
         ResizeMode="NoResize"
         ShowInTaskbar="True"
         Topmost="True"
         Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+
+    <Window.Resources>
+        <sys:Double x:Key="ChecklistFontSize">14</sys:Double>
+        <sys:Double x:Key="ChecklistCheckboxSize">16</sys:Double>
+
+        <Style x:Key="ChecklistCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <BulletDecorator Background="Transparent" SnapsToDevicePixels="True">
+                            <BulletDecorator.Bullet>
+                                <Grid Width="{DynamicResource ChecklistCheckboxSize}"
+                                      Height="{DynamicResource ChecklistCheckboxSize}">
+                                    <Border x:Name="Box"
+                                            BorderBrush="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                                            BorderThickness="1"
+                                            Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+                                            CornerRadius="2"/>
+                                    <Path x:Name="CheckMark"
+                                          Data="M 2 6 L 5 9 L 10 3"
+                                          Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                                          StrokeThickness="2"
+                                          Stretch="Uniform"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Visibility="Collapsed"/>
+                                </Grid>
+                            </BulletDecorator.Bullet>
+                            <ContentPresenter Margin="8,0,0,0"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </BulletDecorator>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -59,9 +105,11 @@
                             <DataTemplate>
                                 <CheckBox Margin="0,6,0,6"
                                           VerticalAlignment="Top"
+                                          Style="{StaticResource ChecklistCheckBoxStyle}"
                                           IsChecked="{Binding IsChecked}">
                                     <CheckBox.Content>
                                         <TextBlock Margin="8,0,0,0"
+                                                   FontSize="{DynamicResource ChecklistFontSize}"
                                                    TextWrapping="Wrap"
                                                    Text="{Binding Text}"/>
                                     </CheckBox.Content>
