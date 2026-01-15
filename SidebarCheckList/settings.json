@@ -1,5 +1,11 @@
 {
   "version": "1.0",
+  "api": {
+    "enabled": false,
+    "base_url": "http://127.0.0.1:8080",
+    "api_key": "",
+    "timeout_ms": 3000
+  },
   "window": {
     "sidebar_width_px": 400
   },

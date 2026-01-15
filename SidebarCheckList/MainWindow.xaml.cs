@@ -235,7 +235,7 @@ namespace SidebarChecklist
 
         private void LoadChecklist()
         {
-            var load = _checklistService.LoadOptional();
+            var load = _checklistService.LoadOptional(_settings);
             if (load.Root is null)
             {
                 _checklistRoot = null;
