@@ -208,39 +208,6 @@ namespace SidebarChecklist
             SafeSaveSettings();
         }
 
-        // --- 幅変更：左端ドラッグ、ドラッグ終了時に保存（8.3）
-        private void ResizeGrip_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            _isResizing = true;
-            _resizeStartPoint = e.GetPosition(this);
-            _resizeStartWidthPx = Width * GetDpiScaleX();
-            ResizeGrip.CaptureMouse();
-        }
-
-        private void ResizeGrip_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (!_isResizing) return;
-
-            var p = e.GetPosition(this);
-            var dx = p.X - _resizeStartPoint.X;
-
-            // 左端ドラッグ：右端固定想定なので「幅 = 開始幅 - dx」
-            var newWidthPx = _resizeStartWidthPx - (dx * GetDpiScaleX());
-            var clamped = Clamp((int)Math.Round(newWidthPx), MinWidthPx, MaxWidthPx);
-
-            _settings.Window.SidebarWidthPx = clamped;
-            ApplyDock(); // ドック位置を維持
-        }
-
-        private void ResizeGrip_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            if (!_isResizing) return;
-            _isResizing = false;
-            ResizeGrip.ReleaseMouseCapture();
-
-            // ドラッグ終了時に保存
-            SafeSaveSettings();
-        }
 
         private void SafeSaveSettings()
         {
