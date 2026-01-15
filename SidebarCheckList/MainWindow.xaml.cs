@@ -126,10 +126,14 @@ namespace SidebarChecklist
         private void UpdateMonitorButtonsState()
         {
             var hasSub = _monitorService.HasSubMonitor();
-            SubBtn.IsEnabled = hasSub;
 
             // 選択中の見た目（Windowsデフォルト範囲）
             var target = (_settings.Display.TargetMonitor ?? "main").ToLowerInvariant();
+            if (target == "sub" && !hasSub)
+                target = "main";
+
+            MainBtn.IsEnabled = target != "main";
+            SubBtn.IsEnabled = hasSub && target != "sub";
             MainBtn.FontWeight = target == "main" ? FontWeights.Bold : FontWeights.Normal;
             SubBtn.FontWeight = target == "sub" ? FontWeights.Bold : FontWeights.Normal;
         }
