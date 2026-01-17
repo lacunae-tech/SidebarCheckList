@@ -10,7 +10,9 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Data;
+using System.Windows.Interop;
 using System.Windows.Threading;
+using Microsoft.Win32;
 
 namespace SidebarChecklist
 {
@@ -37,6 +39,7 @@ namespace SidebarChecklist
         private readonly MainViewModel _vm = new();
         private readonly DispatcherTimer _foregroundTimer;
         private readonly DispatcherTimer _toastTimer;
+        private HwndSource? _hwndSource;
         private bool _isTopmostSuspended;
         private ICollectionView? _listView;
         private string _listSearchText = "";
@@ -76,6 +79,9 @@ namespace SidebarChecklist
         {
             // AppBar登録（作業領域確保）
             _appBarService.Register();
+            _hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+            _hwndSource?.AddHook(WndProc);
+            SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
         }
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -84,6 +90,38 @@ namespace SidebarChecklist
             _appBarService.Unregister();
             _foregroundTimer.Stop();
             _toastTimer.Stop();
+            if (_hwndSource is not null)
+            {
+                _hwndSource.RemoveHook(WndProc);
+                _hwndSource = null;
+            }
+            SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
+        }
+
+        private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
+        {
+            Dispatcher.InvokeAsync(ApplyDock);
+        }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == NativeMethods.WM_SYSCOMMAND)
+            {
+                var command = wParam.ToInt32() & 0xFFF0;
+                if (command == NativeMethods.SC_MOVE)
+                {
+                    handled = true;
+                    return IntPtr.Zero;
+                }
+            }
+
+            if (msg == NativeMethods.WM_NCLBUTTONDOWN && wParam.ToInt32() == NativeMethods.HTCAPTION)
+            {
+                handled = true;
+                return IntPtr.Zero;
+            }
+
+            return IntPtr.Zero;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
