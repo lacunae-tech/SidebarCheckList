@@ -68,14 +68,7 @@ namespace SidebarChecklist
             DataContext = _vm;
 
             Loaded += MainWindow_Loaded;
-            SourceInitialized += MainWindow_SourceInitialized;
             Closing += MainWindow_Closing;
-        }
-
-        private void MainWindow_SourceInitialized(object? sender, EventArgs e)
-        {
-            // AppBar登録（作業領域確保）
-            _appBarService.Register();
         }
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -126,6 +119,7 @@ namespace SidebarChecklist
 
             ApplyChecklistAppearance();
             UpdateMonitorButtonsState();
+            _appBarService.Register();
             ApplyDock();
             _foregroundTimer.Start();
         }
@@ -233,11 +227,10 @@ namespace SidebarChecklist
             if (target == "sub" && !_monitorService.HasSubMonitor())
                 target = "main";
 
-            var mon = _monitorService.GetTarget(target);
             var width = Clamp(_settings.Window.SidebarWidthPx, MinWidthPx, MaxWidthPx);
 
             // AppBarで作業領域確保＋右端ドック
-            _appBarService.ApplyRightDock(mon.WorkArea, width);
+            _appBarService.ApplyRightDock(width);
         }
 
         private void ShowBodyMessage(string msg)

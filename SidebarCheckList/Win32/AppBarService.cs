@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Threading;
 using static SidebarChecklist.Win32.NativeMethods;
 
 namespace SidebarChecklist.Win32
@@ -9,12 +10,20 @@ namespace SidebarChecklist.Win32
     internal sealed class AppBarService
     {
         private readonly Window _window;
+        private readonly DispatcherTimer _reapplyTimer;
         private uint _callbackMsg;
         private bool _registered;
+        private int _lastWidthDip;
+        private HwndSource? _hwndSource;
 
         public AppBarService(Window window)
         {
             _window = window;
+            _reapplyTimer = new DispatcherTimer(DispatcherPriority.Background, _window.Dispatcher)
+            {
+                Interval = TimeSpan.FromMilliseconds(200)
+            };
+            _reapplyTimer.Tick += ReapplyTimer_Tick;
         }
 
         public void Register()
@@ -23,6 +32,8 @@ namespace SidebarChecklist.Win32
 
             var hwnd = new WindowInteropHelper(_window).Handle;
             _callbackMsg = RegisterWindowMessage("SidebarChecklist.AppBarMessage.v1");
+            _hwndSource = HwndSource.FromHwnd(hwnd);
+            _hwndSource?.AddHook(WndProc);
 
             var abd = new APPBARDATA
             {
@@ -39,6 +50,13 @@ namespace SidebarChecklist.Win32
         {
             if (!_registered) return;
 
+            _reapplyTimer.Stop();
+            if (_hwndSource is not null)
+            {
+                _hwndSource.RemoveHook(WndProc);
+                _hwndSource = null;
+            }
+
             var hwnd = new WindowInteropHelper(_window).Handle;
             var abd = new APPBARDATA
             {
@@ -50,22 +68,35 @@ namespace SidebarChecklist.Win32
             _registered = false;
         }
 
-        public void ApplyRightDock(NativeMethods.RECT workArea, int width)
+        public void ApplyRightDock(int widthDip)
         {
+            _lastWidthDip = widthDip;
             if (!_registered) return;
 
             var hwnd = new WindowInteropHelper(_window).Handle;
             var dpi = VisualTreeHelper.GetDpi(_window);
             var scaleX = dpi.DpiScaleX == 0 ? 1.0 : dpi.DpiScaleX;
             var scaleY = dpi.DpiScaleY == 0 ? 1.0 : dpi.DpiScaleY;
+            var widthPx = (int)Math.Round(widthDip * scaleX);
+
+            var monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+            if (monitor == IntPtr.Zero) return;
+
+            var monitorInfo = new MONITORINFOEX
+            {
+                cbSize = System.Runtime.InteropServices.Marshal.SizeOf<MONITORINFOEX>()
+            };
+
+            if (!GetMonitorInfo(monitor, ref monitorInfo)) return;
+            var rcMonitor = monitorInfo.rcMonitor;
 
             // 希望位置（右端）
             var rc = new NativeMethods.RECT
             {
-                top = workArea.top,
-                bottom = workArea.bottom,
-                right = workArea.right,
-                left = workArea.right - width
+                top = rcMonitor.top,
+                bottom = rcMonitor.bottom,
+                right = rcMonitor.right,
+                left = rcMonitor.right - widthPx
             };
 
             var abd = new APPBARDATA
@@ -80,7 +111,7 @@ namespace SidebarChecklist.Win32
             SHAppBarMessage(ABM_QUERYPOS, ref abd);
 
             // 幅を確保
-            abd.rc.left = abd.rc.right - width;
+            abd.rc.left = abd.rc.right - widthPx;
 
             // 確定
             SHAppBarMessage(ABM_SETPOS, ref abd);
@@ -88,8 +119,41 @@ namespace SidebarChecklist.Win32
             // WPF側の位置・サイズも追従（“被らない”を成立させる）
             _window.Left = abd.rc.left / scaleX;
             _window.Top = abd.rc.top / scaleY;
-            _window.Width = width / scaleX;
+            _window.Width = widthPx / scaleX;
             _window.Height = (abd.rc.bottom - abd.rc.top) / scaleY;
+        }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == WM_DISPLAYCHANGE || msg == WM_DPICHANGED || msg == WM_SETTINGCHANGE)
+            {
+                ScheduleReapply();
+            }
+            else if (msg == _callbackMsg && wParam.ToInt32() == ABN_POSCHANGED)
+            {
+                ScheduleReapply();
+            }
+
+            return IntPtr.Zero;
+        }
+
+        private void ScheduleReapply()
+        {
+            if (!_registered || _lastWidthDip <= 0) return;
+            _reapplyTimer.Stop();
+            _reapplyTimer.Start();
+        }
+
+        private void ReapplyTimer_Tick(object? sender, EventArgs e)
+        {
+            _reapplyTimer.Stop();
+            Reapply();
+        }
+
+        private void Reapply()
+        {
+            if (_lastWidthDip <= 0) return;
+            ApplyRightDock(_lastWidthDip);
         }
     }
 }
