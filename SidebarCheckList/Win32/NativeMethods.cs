@@ -10,6 +10,8 @@ namespace SidebarChecklist.Win32
         public const int ABM_QUERYPOS = 0x00000002;
         public const int ABM_SETPOS = 0x00000003;
 
+        public const int ABN_POSCHANGED = 0x00000001;
+
         public const int ABE_LEFT = 0;
         public const int ABE_TOP = 1;
         public const int ABE_RIGHT = 2;
@@ -17,6 +19,9 @@ namespace SidebarChecklist.Win32
 
         public const int WM_ACTIVATE = 0x0006;
         public const int WM_WINDOWPOSCHANGING = 0x0046;
+        public const int WM_DISPLAYCHANGE = 0x007E;
+        public const int WM_DPICHANGED = 0x02E0;
+        public const int WM_SETTINGCHANGE = 0x001A;
 
         public const uint MONITOR_DEFAULTTONEAREST = 2;
 
