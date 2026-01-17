@@ -12,7 +12,6 @@ using System.Windows.Media;
 using System.Windows.Data;
 using System.Windows.Interop;
 using System.Windows.Threading;
-using Microsoft.Win32;
 
 namespace SidebarChecklist
 {
@@ -31,7 +30,7 @@ namespace SidebarChecklist
         private ChecklistService _checklistService = null!;
         private ChecklistSaveService _checklistSaveService = null!;
         private readonly MonitorService _monitorService;
-        private readonly AppBarService _appBarService;
+        private readonly AppBarManager _appBarManager;
 
         private SettingsRoot _settings = new();
         private ChecklistRoot? _checklistRoot;
@@ -56,7 +55,7 @@ namespace SidebarChecklist
             _appDir = AppDomain.CurrentDomain.BaseDirectory;
             _settingsService = new SettingsService(_appDir);
             _monitorService = new MonitorService();
-            _appBarService = new AppBarService(this);
+            _appBarManager = new AppBarManager();
             _foregroundTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(1)
@@ -78,16 +77,15 @@ namespace SidebarChecklist
         private void MainWindow_SourceInitialized(object? sender, EventArgs e)
         {
             // AppBar登録（作業領域確保）
-            _appBarService.Register();
+            _appBarManager.RegisterAppBar(this);
             _hwndSource = PresentationSource.FromVisual(this) as HwndSource;
             _hwndSource?.AddHook(WndProc);
-            SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
         }
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             // AppBar解除
-            _appBarService.Unregister();
+            _appBarManager.UnregisterAppBar();
             _foregroundTimer.Stop();
             _toastTimer.Stop();
             if (_hwndSource is not null)
@@ -95,12 +93,6 @@ namespace SidebarChecklist
                 _hwndSource.RemoveHook(WndProc);
                 _hwndSource = null;
             }
-            SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
-        }
-
-        private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
-        {
-            Dispatcher.InvokeAsync(ApplyDock);
         }
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -271,11 +263,32 @@ namespace SidebarChecklist
             if (target == "sub" && !_monitorService.HasSubMonitor())
                 target = "main";
 
-            var mon = _monitorService.GetTarget(target);
             var width = Clamp(_settings.Window.SidebarWidthPx, MinWidthPx, MaxWidthPx);
+            _appBarManager.UpdateSidebarWidth(width);
 
-            // AppBarで作業領域確保＋右端ドック
-            _appBarService.ApplyRightDock(mon.WorkArea, mon.MonitorArea, width);
+            MoveToTargetMonitor(target, width);
+
+            // AppBarで作業領域確保＋右端ドック（再ネゴシエーション込み）
+            _appBarManager.ReRegisterAndReposition();
+        }
+
+        private void MoveToTargetMonitor(string target, int widthPx)
+        {
+            var mon = _monitorService.GetTarget(target);
+            var monitorBounds = mon.MonitorArea;
+
+            // WorkAreaはAppBar予約後に縮むため、移動もBounds基準で行う。
+            var left = monitorBounds.right - widthPx;
+            var top = monitorBounds.top;
+            var height = monitorBounds.Height;
+
+            var hwnd = new WindowInteropHelper(this).Handle;
+            if (hwnd == IntPtr.Zero)
+            {
+                return;
+            }
+
+            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, left, top, widthPx, height, NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE);
         }
 
         private void ShowBodyMessage(string msg)

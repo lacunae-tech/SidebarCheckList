@@ -10,6 +10,8 @@ namespace SidebarChecklist.Win32
         public const int ABM_QUERYPOS = 0x00000002;
         public const int ABM_SETPOS = 0x00000003;
 
+        public const int ABN_POSCHANGED = 0x00000001;
+
         public const int ABE_LEFT = 0;
         public const int ABE_TOP = 1;
         public const int ABE_RIGHT = 2;
@@ -19,10 +21,16 @@ namespace SidebarChecklist.Win32
         public const int WM_NCLBUTTONDOWN = 0x00A1;
         public const int WM_SYSCOMMAND = 0x0112;
         public const int WM_WINDOWPOSCHANGING = 0x0046;
+        public const int WM_DISPLAYCHANGE = 0x007E;
+        public const int WM_SETTINGCHANGE = 0x001A;
+        public const int WM_DPICHANGED = 0x02E0;
         public const int SC_MOVE = 0xF010;
         public const int HTCAPTION = 0x0002;
 
         public const uint MONITOR_DEFAULTTONEAREST = 2;
+
+        public const uint SWP_NOZORDER = 0x0004;
+        public const uint SWP_NOACTIVATE = 0x0010;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
@@ -88,5 +96,8 @@ namespace SidebarChecklist.Win32
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern uint RegisterWindowMessage(string lpString);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
     }
 }
