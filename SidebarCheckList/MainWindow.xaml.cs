@@ -275,7 +275,7 @@ namespace SidebarChecklist
             var width = Clamp(_settings.Window.SidebarWidthPx, MinWidthPx, MaxWidthPx);
 
             // AppBarで作業領域確保＋右端ドック
-            _appBarService.ApplyRightDock(mon.WorkArea, width);
+            _appBarService.ApplyRightDock(mon.WorkArea, mon.MonitorArea, width);
         }
 
         private void ShowBodyMessage(string msg)

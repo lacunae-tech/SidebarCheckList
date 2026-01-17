@@ -50,7 +50,7 @@ namespace SidebarChecklist.Win32
             _registered = false;
         }
 
-        public void ApplyRightDock(NativeMethods.RECT workArea, int width)
+        public void ApplyRightDock(NativeMethods.RECT workArea, NativeMethods.RECT monitorArea, int width)
         {
             if (!_registered) return;
 
@@ -64,8 +64,8 @@ namespace SidebarChecklist.Win32
             {
                 top = workArea.top,
                 bottom = workArea.bottom,
-                right = workArea.right,
-                left = workArea.right - width
+                right = monitorArea.right,
+                left = monitorArea.right - width
             };
 
             var abd = new APPBARDATA
