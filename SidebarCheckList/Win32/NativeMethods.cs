@@ -19,9 +19,14 @@ namespace SidebarChecklist.Win32
 
         public const int WM_ACTIVATE = 0x0006;
         public const int WM_WINDOWPOSCHANGING = 0x0046;
+        public const int WM_SYSCOMMAND = 0x0112;
         public const int WM_DISPLAYCHANGE = 0x007E;
         public const int WM_DPICHANGED = 0x02E0;
         public const int WM_SETTINGCHANGE = 0x001A;
+        public const int WM_NCLBUTTONDOWN = 0x00A1;
+
+        public const int HTCAPTION = 0x0002;
+        public const int SC_MOVE = 0xF010;
 
         public const uint MONITOR_DEFAULTTONEAREST = 2;
 
