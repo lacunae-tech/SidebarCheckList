@@ -10,15 +10,19 @@ namespace SidebarChecklist.Win32
     internal sealed class AppBarService
     {
         private readonly Window _window;
+        private readonly MonitorService _monitorService;
         private readonly DispatcherTimer _reapplyTimer;
         private uint _callbackMsg;
         private bool _registered;
         private int _lastWidthDip;
         private HwndSource? _hwndSource;
+        private string _targetMonitor;
 
-        public AppBarService(Window window)
+        public AppBarService(Window window, MonitorService monitorService, string targetMonitor)
         {
             _window = window;
+            _monitorService = monitorService;
+            _targetMonitor = targetMonitor;
             _reapplyTimer = new DispatcherTimer(DispatcherPriority.Background, _window.Dispatcher)
             {
                 Interval = TimeSpan.FromMilliseconds(200)
@@ -68,6 +72,11 @@ namespace SidebarChecklist.Win32
             _registered = false;
         }
 
+        public void UpdateTargetMonitor(string targetMonitor)
+        {
+            _targetMonitor = targetMonitor;
+        }
+
         public void ApplyRightDock(int widthDip)
         {
             _lastWidthDip = widthDip;
@@ -79,16 +88,7 @@ namespace SidebarChecklist.Win32
             var scaleY = dpi.DpiScaleY == 0 ? 1.0 : dpi.DpiScaleY;
             var widthPx = (int)Math.Round(widthDip * scaleX);
 
-            var monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-            if (monitor == IntPtr.Zero) return;
-
-            var monitorInfo = new MONITORINFOEX
-            {
-                cbSize = System.Runtime.InteropServices.Marshal.SizeOf<MONITORINFOEX>()
-            };
-
-            if (!GetMonitorInfo(monitor, ref monitorInfo)) return;
-            var rcMonitor = monitorInfo.rcMonitor;
+            var rcMonitor = ResolveMonitorArea(hwnd);
 
             // 希望位置（右端）
             var rc = new NativeMethods.RECT
@@ -119,7 +119,7 @@ namespace SidebarChecklist.Win32
             // WPF側の位置・サイズも追従（“被らない”を成立させる）
             _window.Left = abd.rc.left / scaleX;
             _window.Top = abd.rc.top / scaleY;
-            _window.Width = widthPx / scaleX;
+            _window.Width = (abd.rc.right - abd.rc.left) / scaleX;
             _window.Height = (abd.rc.bottom - abd.rc.top) / scaleY;
         }
 
@@ -154,6 +154,28 @@ namespace SidebarChecklist.Win32
         {
             if (_lastWidthDip <= 0) return;
             ApplyRightDock(_lastWidthDip);
+        }
+
+        private NativeMethods.RECT ResolveMonitorArea(IntPtr hwnd)
+        {
+            if (string.Equals(_targetMonitor, "auto", StringComparison.OrdinalIgnoreCase))
+            {
+                var monitorHandle = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+                if (monitorHandle != IntPtr.Zero)
+                {
+                    var monitorInfo = new MONITORINFOEX
+                    {
+                        cbSize = System.Runtime.InteropServices.Marshal.SizeOf<MONITORINFOEX>()
+                    };
+
+                    if (GetMonitorInfo(monitorHandle, ref monitorInfo))
+                    {
+                        return monitorInfo.rcMonitor;
+                    }
+                }
+            }
+
+            return _monitorService.GetTarget(_targetMonitor).MonitorArea;
         }
     }
 }

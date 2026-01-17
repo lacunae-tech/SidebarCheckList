@@ -53,7 +53,7 @@ namespace SidebarChecklist
             _appDir = AppDomain.CurrentDomain.BaseDirectory;
             _settingsService = new SettingsService(_appDir);
             _monitorService = new MonitorService();
-            _appBarService = new AppBarService(this);
+            _appBarService = new AppBarService(this, _monitorService, "main");
             _foregroundTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(1)
@@ -99,7 +99,8 @@ namespace SidebarChecklist
             _settings.Checklist.CheckboxSize = Clamp(_settings.Checklist.CheckboxSize, MinChecklistCheckboxSize, MaxChecklistCheckboxSize);
 
             if (!string.Equals(_settings.Display.TargetMonitor, "main", StringComparison.OrdinalIgnoreCase) &&
-                !string.Equals(_settings.Display.TargetMonitor, "sub", StringComparison.OrdinalIgnoreCase))
+                !string.Equals(_settings.Display.TargetMonitor, "sub", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(_settings.Display.TargetMonitor, "auto", StringComparison.OrdinalIgnoreCase))
             {
                 _settings.Display.TargetMonitor = "main";
             }
@@ -230,6 +231,7 @@ namespace SidebarChecklist
             var width = Clamp(_settings.Window.SidebarWidthPx, MinWidthPx, MaxWidthPx);
 
             // AppBarで作業領域確保＋右端ドック
+            _appBarService.UpdateTargetMonitor(target);
             _appBarService.ApplyRightDock(width);
         }
 
