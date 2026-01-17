@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Data;
 using System.Windows.Threading;
+using System.Windows.Interop;
 
 namespace SidebarChecklist
 {
@@ -40,6 +41,7 @@ namespace SidebarChecklist
         private bool _isTopmostSuspended;
         private ICollectionView? _listView;
         private string _listSearchText = "";
+        private HwndSource? _hwndSource;
 
         // Resize state
         private bool _isResizing;
@@ -69,6 +71,7 @@ namespace SidebarChecklist
 
             Loaded += MainWindow_Loaded;
             Closing += MainWindow_Closing;
+            SourceInitialized += MainWindow_SourceInitialized;
         }
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -77,6 +80,17 @@ namespace SidebarChecklist
             _appBarService.Unregister();
             _foregroundTimer.Stop();
             _toastTimer.Stop();
+            if (_hwndSource is not null)
+            {
+                _hwndSource.RemoveHook(PreventMoveWndProc);
+                _hwndSource = null;
+            }
+        }
+
+        private void MainWindow_SourceInitialized(object? sender, EventArgs e)
+        {
+            _hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+            _hwndSource?.AddHook(PreventMoveWndProc);
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -123,6 +137,23 @@ namespace SidebarChecklist
             _appBarService.Register();
             ApplyDock();
             _foregroundTimer.Start();
+        }
+
+        private IntPtr PreventMoveWndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == NativeMethods.WM_SYSCOMMAND && (wParam.ToInt32() & 0xFFF0) == NativeMethods.SC_MOVE)
+            {
+                handled = true;
+                return IntPtr.Zero;
+            }
+
+            if (msg == NativeMethods.WM_NCLBUTTONDOWN && wParam.ToInt32() == NativeMethods.HTCAPTION)
+            {
+                handled = true;
+                return IntPtr.Zero;
+            }
+
+            return IntPtr.Zero;
         }
 
         private void ForegroundTimer_Tick(object? sender, EventArgs e)
