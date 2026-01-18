@@ -365,6 +365,14 @@ namespace SidebarChecklist
                 LoadChecklist();
                 ShowToast("保存しました");
             }
+            catch (JsonFileSizeExceededException ex) when (ex.IsWriteOperation)
+            {
+                ShowToast("サイズ超過のため保存できません");
+            }
+            catch (JsonFileSizeExceededException)
+            {
+                MessageBox.Show("JSONファイルエラー", "保存", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             catch
             {
                 MessageBox.Show("保存に失敗しました", "保存", MessageBoxButton.OK, MessageBoxImage.Error);

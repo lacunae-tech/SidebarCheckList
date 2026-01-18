@@ -22,6 +22,7 @@ namespace SidebarChecklist.Services
 
             try
             {
+                JsonFileSizeGuard.EnsureFileWithinLimit(_path);
                 var json = File.ReadAllText(_path);
                 var obj = JsonSerializer.Deserialize<SettingsRoot>(json, JsonOptions());
                 if (obj is null) throw new InvalidOperationException("settings.json invalid");
@@ -38,6 +39,7 @@ namespace SidebarChecklist.Services
         public void Save(SettingsRoot settings)
         {
             var json = JsonSerializer.Serialize(settings, JsonOptions(writeIndented: true));
+            JsonFileSizeGuard.EnsureJsonWithinLimit(json);
             File.WriteAllText(_path, json);
         }
 

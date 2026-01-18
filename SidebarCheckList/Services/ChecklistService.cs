@@ -62,6 +62,7 @@ namespace SidebarChecklist.Services
             ChecklistRoot? root;
             try
             {
+                JsonFileSizeGuard.EnsureFileWithinLimit(_path);
                 var json = File.ReadAllText(_path);
                 return ParseChecklist(json);
             }
@@ -164,6 +165,7 @@ namespace SidebarChecklist.Services
 
             try
             {
+                JsonFileSizeGuard.EnsureFileWithinLimit(_cachePath);
                 var json = File.ReadAllText(_cachePath);
                 return ParseChecklist(json);
             }
@@ -181,6 +183,11 @@ namespace SidebarChecklist.Services
         {
             try
             {
+                if (JsonFileSizeGuard.IsJsonTooLarge(json))
+                {
+                    return;
+                }
+
                 File.WriteAllText(_cachePath, json);
             }
             catch
