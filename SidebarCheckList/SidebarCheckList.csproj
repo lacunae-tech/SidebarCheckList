@@ -10,11 +10,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Content Include="Assets\app.ico" />
+	  <Compile Remove="新しいフォルダー\**" />
+	  <EmbeddedResource Remove="新しいフォルダー\**" />
+	  <None Remove="新しいフォルダー\**" />
+	  <Page Remove="新しいフォルダー\**" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="新しいフォルダー\" />
+	  <Content Include="Assets\app.ico" />
 	</ItemGroup>
 
 </Project>
