@@ -31,6 +31,7 @@ namespace SidebarChecklist.Services
             entries.Add(entry);
 
             var json = JsonSerializer.Serialize(entries, JsonOptions());
+            JsonFileSizeGuard.EnsureJsonWithinLimit(json);
             File.WriteAllText(path, json);
             return path;
         }
@@ -44,9 +45,14 @@ namespace SidebarChecklist.Services
 
             try
             {
+                JsonFileSizeGuard.EnsureFileWithinLimit(path);
                 var json = File.ReadAllText(path);
                 return JsonSerializer.Deserialize<List<ChecklistSaveEntry>>(json, JsonOptions())
                     ?? new List<ChecklistSaveEntry>();
+            }
+            catch (JsonFileSizeExceededException)
+            {
+                throw;
             }
             catch
             {
